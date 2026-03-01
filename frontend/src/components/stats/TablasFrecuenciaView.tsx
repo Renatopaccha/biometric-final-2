@@ -230,102 +230,96 @@ export function TablasFrecuenciaView({ onBack, onNavigateToChat }: TablasFrecuen
 
   // Exportar a Excel con estilos WYSIWYG
   const handleExportExcel = () => {
-    if (segments.length === 0) return;
+    try {
+      console.log('Iniciando exportación a Excel...');
 
-    const dataSource = isEditing ? editedData : tablesData;
-    const wb = XLSX.utils.book_new();
+      if (!XLSX || !XLSX.utils) {
+        throw new Error('La biblioteca de Excel no se ha cargado correctamente.');
+      }
 
-    for (const variable of selectedVars) {
-      const ws: XLSX.WorkSheet = {};
-      let rowNum = 0;
-      const numCols = segmentBy ? 5 : 4;
+      const dataSource = isEditing ? editedData : tablesData;
+      const wb = XLSX.utils.book_new();
+      let hasData = false;
 
-      // Headers
-      const headers = segmentBy
-        ? ['Segmento', 'Categoría', 'N', '%', '% Acum.']
-        : ['Categoría', 'N', '%', '% Acum.'];
+      // Iterar sobre las variables seleccionadas
+      for (const variable of selectedVars) {
+        // Preparar datos planos (Array of Objects) para json_to_sheet
+        const flatData: any[] = [];
 
-      headers.forEach((header, colIdx) => {
-        const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: colIdx });
-        ws[cellRef] = { v: header, t: 's', s: excelStyles.header };
-      });
-      rowNum++;
+        // Determinar segmentos a exportar
+        const segmentsToExport = segmentBy ? segments : [segments[0] || 'General'];
 
-      // Data rows
-      if (segmentBy) {
-        for (const segment of segments) {
+        segmentsToExport.forEach(segment => {
           const tables = dataSource[segment] || [];
           const table = tables.find(t => t.variable === variable);
+
           if (table) {
+            // Filas de datos
             table.rows.forEach(row => {
-              const rowData = [segment, row.categoria, row.frecuencia, row.porcentaje.toFixed(1), row.porcentaje_acumulado.toFixed(1)];
-              rowData.forEach((val, colIdx) => {
-                const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: colIdx });
-                const isNumCol = colIdx >= 2;
-                ws[cellRef] = {
-                  v: val,
-                  t: isNumCol ? 'n' : 's',
-                  s: isNumCol ? excelStyles.cellNumber : excelStyles.cell
-                };
-              });
-              rowNum++;
-            });
-            // Total row
-            const totalData = [segment, 'Total', table.total, '100.0', '100.0'];
-            totalData.forEach((val, colIdx) => {
-              const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: colIdx });
-              ws[cellRef] = {
-                v: val,
-                t: colIdx >= 2 ? 'n' : 's',
-                s: colIdx === 0 || colIdx === 1 ? excelStyles.totalLabel : excelStyles.total
+              const rowData: any = {
+                'Categoría': row.categoria,
+                'N': row.frecuencia,
+                '%': parseFloat(row.porcentaje.toFixed(1)),
+                '% Acum.': parseFloat(row.porcentaje_acumulado.toFixed(1))
               };
+
+              if (segmentBy) {
+                rowData['Segmento'] = segment;
+              }
+
+              flatData.push(rowData);
             });
-            rowNum++;
-          }
-        }
-      } else {
-        const tables = dataSource['General'] || [];
-        const table = tables.find(t => t.variable === variable);
-        if (table) {
-          table.rows.forEach(row => {
-            const rowData = [row.categoria, row.frecuencia, row.porcentaje.toFixed(1), row.porcentaje_acumulado.toFixed(1)];
-            rowData.forEach((val, colIdx) => {
-              const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: colIdx });
-              const isNumCol = colIdx >= 1;
-              ws[cellRef] = {
-                v: val,
-                t: isNumCol ? 'n' : 's',
-                s: isNumCol ? excelStyles.cellNumber : excelStyles.cell
-              };
-            });
-            rowNum++;
-          });
-          // Total row
-          const totalData = ['Total', table.total, '100.0', '100.0'];
-          totalData.forEach((val, colIdx) => {
-            const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: colIdx });
-            ws[cellRef] = {
-              v: val,
-              t: colIdx >= 1 ? 'n' : 's',
-              s: colIdx === 0 ? excelStyles.totalLabel : excelStyles.total
+
+            // Fila de Total
+            const totalRow: any = {
+              'Categoría': 'Total',
+              'N': table.total,
+              '%': 100.0,
+              '% Acum.': 100.0
             };
-          });
-          rowNum++;
+            if (segmentBy) {
+              totalRow['Segmento'] = segment;
+            }
+            flatData.push(totalRow);
+            flatData.push({}); // Fila vacía para separar segmentos
+          }
+        });
+
+        if (flatData.length > 0) {
+          // Crear hoja desde JSON
+          const ws = XLSX.utils.json_to_sheet(flatData);
+
+          // Aplicar estilos básicos a la cabecera
+          const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const address = XLSX.utils.encode_col(C) + "1"; // Primera fila
+            if (!ws[address]) continue;
+            ws[address].s = excelStyles.header;
+          }
+
+          // Ajustar anchos de columna
+          ws['!cols'] = segmentBy
+            ? [{ wch: 15 }, { wch: 30 }, { wch: 10 }, { wch: 10 }, { wch: 12 }]
+            : [{ wch: 30 }, { wch: 10 }, { wch: 10 }, { wch: 12 }];
+
+          XLSX.utils.book_append_sheet(wb, ws, variable.substring(0, 31));
+          hasData = true;
         }
       }
 
-      // Set range
-      ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rowNum - 1, c: numCols - 1 } });
+      if (!hasData) {
+        alert('No se encontraron datos para exportar.');
+        return;
+      }
 
-      // Column widths
-      ws['!cols'] = segmentBy
-        ? [{ wch: 15 }, { wch: 25 }, { wch: 10 }, { wch: 10 }, { wch: 12 }]
-        : [{ wch: 30 }, { wch: 10 }, { wch: 10 }, { wch: 12 }];
+      XLSX.writeFile(wb, `Tablas_Frecuencia${segmentBy ? `_por_${segmentBy}` : ''}.xlsx`);
+      console.log('Exportación completada.');
 
-      XLSX.utils.book_append_sheet(wb, ws, variable.substring(0, 31));
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      alert(`Error al exportar: ${error instanceof Error ? error.message : String(error)}`);
     }
-
-    XLSX.writeFile(wb, `Tablas_Frecuencia${segmentBy ? `_por_${segmentBy}` : ''}.xlsx`);
   };
 
   // Exportar a PDF

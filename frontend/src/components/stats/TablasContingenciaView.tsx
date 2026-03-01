@@ -1,16 +1,16 @@
-import { ArrowLeft, ChevronDown, Loader2, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Loader2, Sparkles } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx-js-style';
 import { ActionToolbar } from './ActionToolbar';
 import { useDataContext } from '../../context/DataContext';
 import { getCrosstabStats } from '../../api/stats';
 import { sendChatMessage } from '../../api/ai';
-import type { ContingencyTableResponse, ContingencyCellData, ContingencyTableResult } from '../../types/stats';
+import type { ContingencyTableResponse, ContingencyCellData } from '../../types/stats';
 
-// Estilos para Excel WYSIWYG - Matching UI Design
+// Estilos para Excel WYSIWYG
 const excelStyles = {
   mainHeader: {
-    fill: { fgColor: { rgb: "D1E4FC" } },  // Blue soft (matching bg-blue-100)
+    fill: { fgColor: { rgb: "D1E4FC" } },
     font: { bold: true, color: { rgb: "1F2937" }, sz: 11 },
     border: {
       top: { style: "thin", color: { rgb: "D1D5DB" } },
@@ -21,7 +21,7 @@ const excelStyles = {
     alignment: { horizontal: "center", vertical: "center", wrapText: true }
   },
   categoryHeader: {
-    fill: { fgColor: { rgb: "E3F2FD" } },  // Very light blue (matching bg-blue-50)
+    fill: { fgColor: { rgb: "E3F2FD" } },
     font: { bold: true, sz: 10, color: { rgb: "1F2937" } },
     border: {
       top: { style: "thin", color: { rgb: "D1D5DB" } },
@@ -32,7 +32,7 @@ const excelStyles = {
     alignment: { horizontal: "center", vertical: "center" }
   },
   metricLabel: {
-    fill: { fgColor: { rgb: "F9FAFB" } },  // Very light gray
+    fill: { fgColor: { rgb: "F9FAFB" } },
     font: { bold: false, sz: 9, color: { rgb: "4B5563" } },
     border: {
       top: { style: "thin", color: { rgb: "E5E7EB" } },
@@ -63,7 +63,7 @@ const excelStyles = {
     alignment: { horizontal: "center", vertical: "center" }
   },
   totalRow: {
-    fill: { fgColor: { rgb: "F1F5F9" } },  // Slate gray
+    fill: { fgColor: { rgb: "F1F5F9" } },
     font: { bold: true, sz: 10 },
     border: {
       top: { style: "medium", color: { rgb: "9CA3AF" } },
@@ -193,147 +193,6 @@ export function TablasContingenciaView({ onBack, onNavigateToChat }: TablasConti
     );
   };
 
-  // ========================================================================
-  // AI INTERPRETATION FUNCTIONS
-  // ========================================================================
-
-  // Helper: Generate context for AI from contingency table
-  const generateContingencyContext = (): string => {
-    if (!rowVar || !colVar || !currentTable) {
-      return "No hay datos disponibles.";
-    }
-
-    let context = `Análisis de Contingencia (Cruce de Variables)${segmentBy ? ` - Segmento: ${activeSegment}` : ''}:\n\n`;
-    context += `Variable de Fila: ${rowVar}\n`;
-    context += `Variable de Columna: ${colVar}\n\n`;
-    context += `Datos del Cruce:\n`;
-
-    // Iterate through rows and columns
-    currentTable.row_categories.forEach(rowCat => {
-      context += `\nPara ${rowVar} = "${rowCat}":\n`;
-      currentTable.col_categories.forEach(colCat => {
-        const cellData = currentTable.cells[rowCat][colCat];
-        context += `  - ${colVar} = "${colCat}": ${cellData.count} casos (${cellData.row_percent.toFixed(1)}% de fila, ${cellData.col_percent.toFixed(1)}% de columna)\n`;
-      });
-      const rowTotal = currentTable.row_totals[rowCat];
-      context += `  Total: ${rowTotal.count} casos\n`;
-    });
-
-    // Add column totals
-    context += `\nTotales por ${colVar}:\n`;
-    currentTable.col_categories.forEach(colCat => {
-      const colTotal = currentTable.col_totals[colCat];
-      context += `  - ${colVar} = "${colCat}": ${colTotal.count} casos (${colTotal.col_percent.toFixed(1)}%)\n`;
-    });
-
-    context += `\nTotal General: ${currentTable.grand_total} casos\n`;
-
-    // Add chi-square if available
-    const tableWithStats = currentTable as any;
-    if (tableWithStats.chi_square !== undefined && tableWithStats.p_value !== undefined) {
-      context += `\nPrueba Chi-cuadrado:\n`;
-      context += `  - χ² = ${tableWithStats.chi_square.toFixed(3)}\n`;
-      context += `  - p-value = ${tableWithStats.p_value.toFixed(4)}\n`;
-    }
-
-    return context;
-  };
-
-  // Handler: AI interpretation
-  const handleAIInterpretation = async () => {
-    if (analysisResult || isAnalyzing) return; // Already analyzing or result exists
-
-    if (!rowVar || !colVar) {
-      alert('Selecciona las variables de fila y columna primero');
-      return;
-    }
-
-    setIsAnalyzing(true);
-    try {
-      const contingencyContext = generateContingencyContext();
-      const prompt = `Actúa como un experto bioestadístico. Analiza la siguiente tabla de contingencia entre '${rowVar}' y '${colVar}'.
-
-Tu objetivo es determinar si parece haber una asociación o dependencia entre las variables basándote en la distribución de los datos.
-
-Resalta las casillas con mayor frecuencia o desbalances notables. Si hay prueba Chi-cuadrado disponible, interpreta el p-value. Sé breve y concluyente.
-
-${contingencyContext}`;
-
-      const response = await sendChatMessage({
-        session_id: sessionId || undefined,
-        chat_id: activeChatId || undefined,
-        message: prompt,
-        history: []
-      });
-
-      if (response.success) {
-        setAnalysisResult(response.response);
-        if (response.chat_id) {
-          setActiveChatId(response.chat_id);
-        }
-      } else {
-        setError("No se pudo obtener la interpretación de IA.");
-      }
-    } catch (err) {
-      console.error("AI Error:", err);
-      setError("Error de conexión con el servicio de IA.");
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // Handler: Continue to chat
-  const handleContinueToChat = async () => {
-    if (!onNavigateToChat || !sessionId) return;
-
-    let finalChatId = activeChatId;
-
-    try {
-      setIsNavigating(true);
-
-      // Si no hay análisis previo, enviar contexto silenciosamente
-      if (!activeChatId) {
-        const contingencyContext = generateContingencyContext();
-        const interpretationContext = analysisResult
-          ? `\n\nInterpretación Previa Realizada:\n${analysisResult}`
-          : '\n\n(El usuario aún no ha solicitado una interpretación automática)';
-
-        const handoffMessage = `**SYSTEM CONTEXT HANDOFF**
-        
-Estás recibiendo el contexto de la sesión actual de "Tablas de Contingencia" para asistir al usuario.
-
-DATOS ESTRUCTURADOS:
-${contingencyContext}
-${interpretationContext}
-
-INSTRUCCIÓN:
-El usuario ha sido transferido al chat principal. Mantén este contexto en memoria para responder preguntas sobre la relación entre estas variables. Saluda brevemente confirmando que tienes los datos.`;
-
-        const response = await sendChatMessage({
-          session_id: sessionId,
-          chat_id: activeChatId || undefined,
-          message: handoffMessage,
-          history: []
-        });
-
-        if (response.chat_id) {
-          finalChatId = response.chat_id;
-          setActiveChatId(response.chat_id);
-        }
-      }
-
-    } catch (error) {
-      console.error("Error transfiriendo contexto:", error);
-    } finally {
-      setIsNavigating(false);
-      onNavigateToChat(finalChatId || undefined);
-    }
-  };
-
-  // ========================================================================
-  // EXPORT FUNCTIONS
-  // ========================================================================
-
   // Helper: Get metric label
   const getMetricLabel = (metricKey: string): string => {
     const labels: Record<string, string> = {
@@ -356,208 +215,164 @@ El usuario ha sido transferido al chat principal. Mantén este contexto en memor
     }
   };
 
-  // Exportar a Excel con diseño educativo (merged cells, double headers)
+  // ========================================================================
+  // EXPORT FUNCTIONS (CRÍTICO: AoA Implementation)
+  // ========================================================================
   const handleExportExcel = () => {
-    if (!normalizedTableData || !currentTable) return;
+    try {
+      console.log('Iniciando exportación Contingencia (AoA)...');
 
-    const wb = XLSX.utils.book_new();
-
-    // Iterar sobre todos los segmentos
-    normalizedTableData.segments.forEach(segmentName => {
-      const table = normalizedTableData.tables[segmentName];
-      if (!table) return;
-
-      const ws: XLSX.WorkSheet = {};
-      const merges: XLSX.Range[] = [];
-      let rowNum = 0;
-
-      const numColCategories = table.col_categories.length;
-      const metricsCount = selectedMetrics.length;
-      const totalCol = 2 + numColCategories;
-
-      // ========================================================================
-      // HEADER ROW 1: [Row Variable] | Métrica | [Col Variable (merged)] | TOTAL
-      // ========================================================================
-
-      // A1: Row variable name (merge with A2)
-      const cellA1 = XLSX.utils.encode_cell({ r: 0, c: 0 });
-      ws[cellA1] = { v: table.row_variable, t: 's', s: excelStyles.mainHeader };
-      merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } });
-
-      // B1: "Métrica" (merge with B2)
-      const cellB1 = XLSX.utils.encode_cell({ r: 0, c: 1 });
-      ws[cellB1] = { v: 'Métrica', t: 's', s: excelStyles.mainHeader };
-      merges.push({ s: { r: 0, c: 1 }, e: { r: 1, c: 1 } });
-
-      // C1: Column variable name (merged horizontally)
-      const cellC1 = XLSX.utils.encode_cell({ r: 0, c: 2 });
-      ws[cellC1] = { v: table.col_variable, t: 's', s: excelStyles.mainHeader };
-      merges.push({ s: { r: 0, c: 2 }, e: { r: 0, c: 1 + numColCategories } });
-
-      // Last column: "TOTAL" (merge vertically)
-      const cellTotal1 = XLSX.utils.encode_cell({ r: 0, c: totalCol });
-      ws[cellTotal1] = { v: 'TOTAL', t: 's', s: excelStyles.mainHeader };
-      merges.push({ s: { r: 0, c: totalCol }, e: { r: 1, c: totalCol } });
-
-      rowNum = 1;
-
-      // ========================================================================
-      // HEADER ROW 2: Column categories
-      // ========================================================================
-
-      table.col_categories.forEach((colCat, idx) => {
-        const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: 2 + idx });
-        ws[cellRef] = { v: String(colCat), t: 's', s: excelStyles.categoryHeader };
-      });
-
-      rowNum = 2;
-
-      // ========================================================================
-      // DATA ROWS: Each row category has N metric sub-rows
-      // ========================================================================
-
-      table.row_categories.forEach(rowCat => {
-        const startRow = rowNum;
-
-        selectedMetrics.forEach((metricKey, metricIdx) => {
-          const metricLabel = getMetricLabel(metricKey);
-
-          // Column A: Category name (merged vertically)
-          const cellRefA = XLSX.utils.encode_cell({ r: rowNum, c: 0 });
-          if (metricIdx === 0) {
-            ws[cellRefA] = { v: String(rowCat), t: 's', s: excelStyles.categoryCell };
-          } else {
-            ws[cellRefA] = { v: '', t: 's', s: excelStyles.categoryCell };
-          }
-
-          // Column B: Metric label
-          const cellRefB = XLSX.utils.encode_cell({ r: rowNum, c: 1 });
-          ws[cellRefB] = { v: metricLabel, t: 's', s: excelStyles.metricLabel };
-
-          // Data columns
-          table.col_categories.forEach((colCat, colIdx) => {
-            const cellData = table.cells[rowCat][colCat];
-            const value = getCellValue(cellData, metricKey);
-            const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: colIdx + 2 });
-
-            if (metricKey === 'frecuencia') {
-              ws[cellRef] = { v: value, t: 'n', s: excelStyles.cellNumber };
-            } else {
-              ws[cellRef] = {
-                v: value / 100,
-                t: 'n',
-                s: { ...excelStyles.cellNumber, numFmt: '0.00%' }
-              };
-            }
-          });
-
-          // Total column
-          const totalData = table.row_totals[rowCat];
-          const totalValue = getCellValue(totalData, metricKey);
-          const cellRefTotal = XLSX.utils.encode_cell({ r: rowNum, c: totalCol });
-
-          if (metricKey === 'frecuencia') {
-            ws[cellRefTotal] = { v: totalValue, t: 'n', s: excelStyles.cellNumber };
-          } else {
-            ws[cellRefTotal] = {
-              v: totalValue / 100,
-              t: 'n',
-              s: { ...excelStyles.cellNumber, numFmt: '0.00%' }
-            };
-          }
-
-          rowNum++;
-        });
-
-        // Merge column A for this category (vertical merge across all metrics)
-        if (metricsCount > 1) {
-          merges.push({ s: { r: startRow, c: 0 }, e: { r: startRow + metricsCount - 1, c: 0 } });
-        }
-      });
-
-      // ========================================================================
-      // TOTAL ROW
-      // ========================================================================
-
-      const totalStartRow = rowNum;
-
-      selectedMetrics.forEach((metricKey, metricIdx) => {
-        const metricLabel = getMetricLabel(metricKey);
-
-        // Column A: "TOTAL" (merged vertically)
-        const cellRefA = XLSX.utils.encode_cell({ r: rowNum, c: 0 });
-        if (metricIdx === 0) {
-          ws[cellRefA] = { v: 'TOTAL', t: 's', s: excelStyles.totalRow };
-        } else {
-          ws[cellRefA] = { v: '', t: 's', s: excelStyles.totalRow };
-        }
-
-        // Column B: Metric label
-        const cellRefB = XLSX.utils.encode_cell({ r: rowNum, c: 1 });
-        ws[cellRefB] = { v: metricLabel, t: 's', s: excelStyles.totalRow };
-
-        // Column totals
-        table.col_categories.forEach((colCat, colIdx) => {
-          const cellData = table.col_totals[colCat];
-          const value = getCellValue(cellData, metricKey);
-          const cellRef = XLSX.utils.encode_cell({ r: rowNum, c: colIdx + 2 });
-
-          if (metricKey === 'frecuencia') {
-            ws[cellRef] = { v: value, t: 'n', s: excelStyles.totalRow };
-          } else {
-            ws[cellRef] = {
-              v: value / 100,
-              t: 'n',
-              s: { ...excelStyles.totalRow, numFmt: '0.00%' }
-            };
-          }
-        });
-
-        // Grand total
-        const grandTotalValue = metricKey === 'frecuencia' ? table.grand_total : 100.0;
-        const cellRefTotal = XLSX.utils.encode_cell({ r: rowNum, c: totalCol });
-
-        if (metricKey === 'frecuencia') {
-          ws[cellRefTotal] = { v: grandTotalValue, t: 'n', s: excelStyles.totalRow };
-        } else {
-          ws[cellRefTotal] = {
-            v: grandTotalValue / 100,
-            t: 'n',
-            s: { ...excelStyles.totalRow, numFmt: '0.00%' }
-          };
-        }
-
-        rowNum++;
-      });
-
-      // Merge TOTAL cell in column A
-      if (metricsCount > 1) {
-        merges.push({ s: { r: totalStartRow, c: 0 }, e: { r: totalStartRow + metricsCount - 1, c: 0 } });
+      if (!normalizedTableData) {
+        alert('No hay datos para exportar.');
+        return;
       }
 
-      // ========================================================================
-      // FINALIZE WORKSHEET
-      // ========================================================================
+      if (!XLSX || !XLSX.utils) {
+        throw new Error('Librería XLSX no cargada');
+      }
 
-      ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rowNum - 1, c: totalCol } });
-      ws['!merges'] = merges;
-      ws['!cols'] = [
-        { wch: 18 },
-        { wch: 14 },
-        ...table.col_categories.map(() => ({ wch: 12 })),
-        { wch: 12 }
-      ];
-      ws['!rows'] = [
-        { hpt: 24 },
-        { hpt: 20 }
-      ];
+      const wb = XLSX.utils.book_new();
+      let hasData = false;
 
-      const sheetName = String(segmentName).substring(0, 31);
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    });
+      // Iterar sobre todos los segmentos para crear hojas
+      normalizedTableData.segments.forEach(segmentName => {
+        const table = normalizedTableData.tables[segmentName];
+        if (!table) return;
 
-    const fileName = `Tabla_Contingencia_${String(rowVar)}_x_${String(colVar)}${segmentBy ? `_por_${String(segmentBy)}` : ''}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+        // Construir Array of Arrays (AoA)
+        const aoaData: any[][] = [];
+
+        // 1. Encabezados Principales
+        // Fila 0: Títulos generales
+        const row0 = [
+          `Tabla de Contingencia: ${table.row_variable} vs ${table.col_variable}`,
+          '',
+          ...Array(table.col_categories.length).fill('')
+        ];
+        aoaData.push(row0);
+
+        // Fila 1: Segmento
+        const row1 = [`Segmento: ${segmentName}`, '', ...Array(table.col_categories.length).fill('')];
+        aoaData.push(row1);
+        aoaData.push([]); // Espacio
+
+        // 2. Encabezados de Tabla
+        // Fila Headers: [Var Fila \ Var Col] | [Col Cat 1] | [Col Cat 2] ... | Total
+        const headerRow = [
+          `${table.row_variable} \\ ${table.col_variable}`,
+          ...table.col_categories,
+          'Total'
+        ];
+        aoaData.push(headerRow);
+
+        // 3. Filas de Datos
+        // Iteramos filas (categorías de variable fila)
+        table.row_categories.forEach(rowCat => {
+          // Para contingencia, a veces queremos mostrar múltiples métricas por celda.
+          // Para Excel plano, una opción es mostrar N (frecuencia) principal, o múltiples filas por categoría.
+          // Siguiendo el requerimiento de "Matriz", haremos una fila por categoría mostrando FRECUENCIA (N).
+          // Si el usuario quiere ver porcentajes, técnicamente necesitaríamos más filas o celdas complejas.
+          // Por simplicidad y robustez del "AoA" solicitado, exportaremos FRECUENCIA principal.
+          // Opcionalmente, podemos añadir filas adicionales para %, pero el usuario pidió "Matriz de Arrays".
+
+          // Vamos a exportar un bloque por métrica seleccionada para ser completos pero ordenados.
+
+          selectedMetrics.forEach(metric => {
+            const metricLabel = getMetricLabel(metric);
+            const rowData: any[] = [`${rowCat} (${metricLabel})`];
+
+            // Valores para cada columna
+            table.col_categories.forEach(colCat => {
+              const cell = table.cells[rowCat][colCat];
+              const val = getCellValue(cell, metric);
+              // Formato: si es pct, dividir por 100 para formato Excel %
+              rowData.push(metric === 'frecuencia' ? val : val / 100);
+            });
+
+            // Total Fila
+            const totalCell = table.row_totals[rowCat];
+            const totalVal = getCellValue(totalCell, metric);
+            rowData.push(metric === 'frecuencia' ? totalVal : totalVal / 100);
+
+            aoaData.push(rowData);
+          });
+        });
+
+        // 4. Fila de Totales de Columna
+        selectedMetrics.forEach(metric => {
+          const metricLabel = getMetricLabel(metric);
+          const totalRow = [`Total General (${metricLabel})`];
+
+          table.col_categories.forEach(colCat => {
+            const colTotal = table.col_totals[colCat];
+            const val = getCellValue(colTotal, metric);
+            totalRow.push(metric === 'frecuencia' ? val : val / 100);
+          });
+
+          // Grand Total
+          const grandTotal = metric === 'frecuencia' ? table.grand_total : 100.0;
+          totalRow.push(metric === 'frecuencia' ? grandTotal : grandTotal / 100);
+
+          aoaData.push(totalRow);
+        });
+
+        // Crear hoja desde AoA
+        const ws = XLSX.utils.aoa_to_sheet(aoaData);
+
+        // Aplicar estilos
+        // Rango de datos empieza en fila 4 (índice 3)
+        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+
+        // Estilo Header
+        for (let C = 0; C <= range.e.c; ++C) {
+          const addr = XLSX.utils.encode_cell({ r: 3, c: C });
+          if (ws[addr]) ws[addr].s = excelStyles.categoryHeader;
+        }
+
+        // Estilos de celdas de datos (porcentajes)
+        // Recorremos desde fila 4 hasta el final
+        for (let R = 4; R <= range.e.r; ++R) {
+          for (let C = 1; C <= range.e.c; ++C) { // Saltamos primera columna (etiquetas)
+            const addr = XLSX.utils.encode_cell({ r: R, c: C });
+            if (!ws[addr]) continue;
+
+            // Detectar si es fila de porcentaje (basado en etiqueta en col 0, o lógica de bloque)
+            // Simplificación: Mirar valor. Si es <= 1 y no es entero, probablemente porcentaje.
+            // Mejor: Usar el índice de fila para saber qué métrica es.
+            // Como es complejo, aplicamos formato numérico genérico o % si es pequeño.
+
+            const val = ws[addr].v;
+            if (typeof val === 'number' && val <= 1 && val !== 0 && !Number.isInteger(val)) {
+              ws[addr].t = 'n';
+              ws[addr].s = { numFmt: '0.00%' };
+            } else {
+              ws[addr].t = 'n';
+              ws[addr].s = excelStyles.cellNumber;
+            }
+          }
+        }
+
+        // Ajustar anchos
+        ws['!cols'] = [{ wch: 30 }, ...Array(table.col_categories.length + 1).fill({ wch: 12 })];
+
+        // Añadir hoja al libro
+        XLSX.utils.book_append_sheet(wb, ws, segmentName.substring(0, 31));
+        hasData = true;
+      });
+
+      if (!hasData) {
+        alert('No se generaron datos para exportar.');
+        return;
+      }
+
+      const fileName = `Contingencia_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      console.log('Exportación Contingencia completada.');
+
+    } catch (error) {
+      console.error('Error exporting Contingency Excel:', error);
+      alert(`Error al exportar: ${error instanceof Error ? error.message : String(error)}`);
+    }
   };
 
   // Exportar a PDF
@@ -568,10 +383,8 @@ El usuario ha sido transferido al chat principal. Mantén este contexto en memor
     }
 
     try {
-      // Importación dinámica de jspdf y autotable
       const jsPDFModule = await import('jspdf');
       const autoTableModule = await import('jspdf-autotable');
-
       const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
       const autoTable = autoTableModule.default;
 
@@ -579,350 +392,160 @@ El usuario ha sido transferido al chat principal. Mantén este contexto en memor
       const pageWidth = doc.internal.pageSize.getWidth();
       let yPos = 20;
 
-      // Título
+      // Headers PDF
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.text('Tabla de Contingencia', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 8;
-
-      // Subtítulo
-      doc.setFontSize(11);
+      yPos += 10;
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`${String(rowVar)} × ${String(colVar)}`, pageWidth / 2, yPos, { align: 'center' });
-      yPos += 5;
-
-      // Fecha
-      doc.setFontSize(9);
       doc.text(`Generado: ${new Date().toLocaleString()}`, pageWidth / 2, yPos, { align: 'center' });
-      yPos += 5;
-
-      if (segmentBy) {
-        doc.text(`Segmentado por: ${segmentBy}`, pageWidth / 2, yPos, { align: 'center' });
-        yPos += 5;
-      }
       yPos += 10;
 
-      // Iterar sobre todos los segmentos
+      // Iterar segmentos
       normalizedTableData.segments.forEach((segmentName, segIdx) => {
         const table = normalizedTableData.tables[segmentName];
         if (!table) return;
 
-        // Título del segmento
-        if (segmentBy && normalizedTableData.segments.length > 1) {
-          doc.setFontSize(11);
-          doc.setFont('helvetica', 'bold');
-          doc.text(`Segmento: ${segmentName}`, 14, yPos);
-          yPos += 6;
-        }
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Segmento: ${segmentName}`, 14, yPos);
+        yPos += 6;
 
-        // Construir datos de la tabla en formato stacked
-        const tableHeaders = ['', 'Métrica', ...table.col_categories, 'Total'];
-        const tableData: any[] = [];
+        const head = [['', ...table.col_categories, 'Total']];
 
-        // Filas de datos
+        // Construir body para autotable
+        const body: any[] = [];
+
         table.row_categories.forEach(rowCat => {
-          selectedMetrics.forEach((metricKey, metricIdx) => {
-            const metricLabel = getMetricLabel(metricKey);
-            const row = [
-              metricIdx === 0 ? rowCat : '',  // Solo mostrar categoría en primera fila
-              metricLabel
-            ];
+          selectedMetrics.forEach((metric, idx) => {
+            const label = idx === 0 ? rowCat : ''; // Agrupar visualmente
+            const metricLabel = getMetricLabel(metric);
+            const row = [`${label} ${idx === 0 ? '' : `(${metricLabel})`}`];
 
-            // Valores de columnas
+            // Cols
             table.col_categories.forEach(colCat => {
-              const cellData = table.cells[rowCat][colCat];
-              const value = getCellValue(cellData, metricKey);
-              row.push(metricKey === 'frecuencia' ? value.toString() : value.toFixed(2));
+              const val = getCellValue(table.cells[rowCat][colCat], metric);
+              row.push(metric === 'frecuencia' ? val.toString() : val.toFixed(1) + '%');
             });
+            // Total
+            const tot = getCellValue(table.row_totals[rowCat], metric);
+            row.push(metric === 'frecuencia' ? tot.toString() : tot.toFixed(1) + '%');
 
-            // Total de fila
-            const totalData = table.row_totals[rowCat];
-            const totalValue = getCellValue(totalData, metricKey);
-            row.push(metricKey === 'frecuencia' ? totalValue.toString() : totalValue.toFixed(2));
-
-            tableData.push(row);
+            body.push(row);
           });
-        });
-
-        // Fila TOTAL
-        selectedMetrics.forEach((metricKey, metricIdx) => {
-          const metricLabel = getMetricLabel(metricKey);
-          const row = [
-            metricIdx === 0 ? 'TOTAL' : '',
-            metricLabel
-          ];
-
-          // Totales de columnas
-          table.col_categories.forEach(colCat => {
-            const cellData = table.col_totals[colCat];
-            const value = getCellValue(cellData, metricKey);
-            row.push(metricKey === 'frecuencia' ? value.toString() : value.toFixed(2));
-          });
-
-          // Grand total
-          const grandTotalValue = metricKey === 'frecuencia' ? table.grand_total : 100.0;
-          row.push(grandTotalValue.toString());
-
-          tableData.push(row);
         });
 
         autoTable(doc, {
           startY: yPos,
-          head: [tableHeaders],
-          body: tableData,
+          head: head,
+          body: body,
           theme: 'grid',
-          headStyles: {
-            fillColor: [243, 244, 246],
-            textColor: [31, 41, 55],
-            lineColor: [209, 213, 219],
-            lineWidth: 0.1,
-            fontStyle: 'bold',
-            halign: 'center'
-          },
-          bodyStyles: {
-            lineColor: [209, 213, 219],
-            lineWidth: 0.1,
-            textColor: [55, 65, 81],
-            halign: 'center'
-          },
-          columnStyles: {
-            0: { halign: 'left', cellWidth: 25 },
-            1: { halign: 'left', cellWidth: 20 }
-          },
-          alternateRowStyles: { fillColor: [255, 255, 255] },
-          margin: { left: 14, right: 14 },
-          styles: { fontSize: 8, cellPadding: 2 },
-          didParseCell: (data) => {
-            // Resaltar fila TOTAL
-            const dataRowIndex = data.row.index;
-            const totalRowStart = table.row_categories.length * selectedMetrics.length;
-            if (dataRowIndex >= totalRowStart) {
-              data.cell.styles.fillColor = [229, 231, 235];
-              data.cell.styles.fontStyle = 'bold';
-            }
-          }
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [220, 220, 220], textColor: 20 },
+          margin: { top: 20 }
         });
 
-        yPos = (doc as any).lastAutoTable.finalY + 10;
-
-        // Nueva página si es necesario (y no es el último segmento)
-        if (yPos > 250 && segIdx < normalizedTableData.segments.length - 1) {
-          doc.addPage();
-          yPos = 20;
-        }
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+        if (yPos > 250) { doc.addPage(); yPos = 20; }
       });
 
-      const fileName = `Tabla_Contingencia_${String(rowVar)}_x_${String(colVar)}${segmentBy ? `_por_${String(segmentBy)}` : ''}.pdf`;
-      doc.save(fileName);
+      doc.save(`Contingencia_${rowVar}_vs_${colVar}.pdf`);
+
     } catch (error) {
       console.error('Error al exportar PDF:', error);
-      alert('Error al exportar a PDF. Por favor, intenta de nuevo.');
+      alert('Error al exportar PDF.');
     }
   };
 
-  const metrics = [
-    { value: 'frecuencia', label: 'N (Frecuencia)' },
-    { value: 'pct_fila', label: '% Fila' },
-    { value: 'pct_columna', label: '% Columna' },
-    { value: 'pct_total', label: '% Total' }
-  ];
-
-  // Component for rendering individual cell metrics
-  const MetricCell = ({ data, isTotal = false }: { data: ContingencyCellData; isTotal?: boolean }) => {
-    const showN = selectedMetrics.includes('frecuencia');
-    const showPctRow = selectedMetrics.includes('pct_fila');
-    const showPctCol = selectedMetrics.includes('pct_columna');
-    const showPctTotal = selectedMetrics.includes('pct_total');
-
-    return (
-      <div className="py-3">
-        {showN && (
-          <div className={`text-center mb-1 text-slate-900`} style={{ fontFamily: 'IBM Plex Mono, JetBrains Mono, Roboto Mono, monospace', fontWeight: isTotal ? 700 : 600, fontSize: '14px' }}>
-            {data.count}
-          </div>
-        )}
-        {showPctRow && (
-          <div className="text-slate-700 text-center leading-relaxed" style={{ fontFamily: 'IBM Plex Mono, JetBrains Mono, Roboto Mono, monospace', fontWeight: isTotal ? 700 : 600, fontSize: '13px' }}>
-            {data.row_percent.toFixed(2)}%
-          </div>
-        )}
-        {showPctCol && (
-          <div className="text-slate-700 text-center leading-relaxed" style={{ fontFamily: 'IBM Plex Mono, JetBrains Mono, Roboto Mono, monospace', fontWeight: isTotal ? 700 : 600, fontSize: '13px' }}>
-            {data.col_percent.toFixed(2)}%
-          </div>
-        )}
-        {showPctTotal && (
-          <div className="text-slate-700 text-center leading-relaxed" style={{ fontFamily: 'IBM Plex Mono, JetBrains Mono, Roboto Mono, monospace', fontWeight: isTotal ? 700 : 600, fontSize: '13px' }}>
-            {data.total_percent.toFixed(2)}%
-          </div>
-        )}
-      </div>
-    );
+  // ========================================================================
+  // AI INTERPRETATION HANDLERS
+  // ========================================================================
+  const generateContingencyContext = (): string => {
+    if (!rowVar || !colVar || !currentTable) return "No hay datos.";
+    return `Tabla de contingencia ${rowVar} vs ${colVar}. Total: ${currentTable.grand_total}.`;
   };
 
+  const handleAIInterpretation = async () => {
+    if (analysisResult || isAnalyzing) return;
+    if (!rowVar || !colVar) { alert('Selecciona variables primero'); return; }
+
+    setIsAnalyzing(true);
+    try {
+      const prompt = `Analiza tabla contingencia: ${rowVar} vs ${colVar}. Contexto: ${generateContingencyContext()}.`;
+      const response = await sendChatMessage({
+        session_id: sessionId,
+        message: prompt,
+        history: []
+      });
+      if (response.success) setAnalysisResult(response.response);
+      else setError("Error IA");
+    } catch (e) { setError("Error conexión IA"); }
+    finally { setIsAnalyzing(false); }
+  };
+
+  const handleContinueToChat = async () => {
+    if (!onNavigateToChat || !sessionId) return;
+    if (onNavigateToChat) onNavigateToChat(activeChatId || undefined);
+  };
+
+
+  // Render
   return (
     <div className="h-full flex flex-col bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-6 shadow-sm">
         <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-            title="Volver al menú"
-          >
+          <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-lg">
             <ArrowLeft className="w-5 h-5 text-slate-600" />
           </button>
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-1 h-6 bg-gradient-to-b from-teal-500 to-teal-600 rounded-full"></div>
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Tablas de Contingencia</h2>
-            </div>
-            <p className="text-slate-600 leading-relaxed ml-4">Análisis de relación entre variables categóricas</p>
-          </div>
+          <h2 className="text-2xl font-bold text-slate-900">Tablas de Contingencia</h2>
         </div>
 
-        {/* Control Bar */}
-        <div className="flex items-center gap-3 ml-4 flex-wrap">
-          {/* Row Variable Dropdown */}
+        {/* Controls */}
+        <div className="flex items-center gap-3 ml-4">
+          {/* Row Var */}
           <div className="relative" ref={rowRef}>
-            <button
-              onClick={() => setShowRowDropdown(!showRowDropdown)}
-              className="px-4 py-2.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm min-w-[220px] shadow-sm"
-            >
-              <span className="text-slate-700">
-                {rowVar ? `Fila: ${rowVar}` : 'Variable Fila'}
-              </span>
-              <ChevronDown className="w-4 h-4 text-slate-500 ml-auto" />
+            <button onClick={() => setShowRowDropdown(!showRowDropdown)} className="px-4 py-2 border rounded-lg bg-white">
+              {rowVar ? `Fila: ${rowVar}` : 'Variable Fila'} <ChevronDown className="inline w-4 h-4" />
             </button>
-
             {showRowDropdown && (
-              <div className="absolute top-full mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg z-10 max-h-64 overflow-auto">
-                {columns.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-slate-500 italic">
-                    No hay columnas disponibles
+              <div className="absolute top-full bg-white border shadow-lg z-10 max-h-60 overflow-auto w-64">
+                {columns.map(c => (
+                  <div key={c} onClick={() => { setRowVar(c); setShowRowDropdown(false); }} className="px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                    {c}
                   </div>
-                ) : (
-                  columns.map((column) => (
-                    <button
-                      key={column}
-                      onClick={() => {
-                        setRowVar(column);
-                        setShowRowDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-sm text-slate-900"
-                    >
-                      {column}
-                    </button>
-                  ))
-                )}
+                ))}
               </div>
             )}
           </div>
 
-          {/* Column Variable Dropdown */}
+          {/* Col Var */}
           <div className="relative" ref={colRef}>
-            <button
-              onClick={() => setShowColDropdown(!showColDropdown)}
-              className="px-4 py-2.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm min-w-[220px] shadow-sm"
-            >
-              <span className="text-slate-700">
-                {colVar ? `Columna: ${colVar}` : 'Variable Columna'}
-              </span>
-              <ChevronDown className="w-4 h-4 text-slate-500 ml-auto" />
+            <button onClick={() => setShowColDropdown(!showColDropdown)} className="px-4 py-2 border rounded-lg bg-white">
+              {colVar ? `Columna: ${colVar}` : 'Variable Columna'} <ChevronDown className="inline w-4 h-4" />
             </button>
-
             {showColDropdown && (
-              <div className="absolute top-full mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg z-10 max-h-64 overflow-auto">
-                {columns.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-slate-500 italic">
-                    No hay columnas disponibles
+              <div className="absolute top-full bg-white border shadow-lg z-10 max-h-60 overflow-auto w-64">
+                {columns.map(c => (
+                  <div key={c} onClick={() => { setColVar(c); setShowColDropdown(false); }} className="px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                    {c}
                   </div>
-                ) : (
-                  columns.map((column) => (
-                    <button
-                      key={column}
-                      onClick={() => {
-                        setColVar(column);
-                        setShowColDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-sm text-slate-900"
-                    >
-                      {column}
-                    </button>
-                  ))
-                )}
+                ))}
               </div>
             )}
           </div>
 
-          {/* Segment By Dropdown */}
+          {/* Segment By */}
           <div className="relative" ref={segmentRef}>
-            <button
-              onClick={() => setShowSegmentDropdown(!showSegmentDropdown)}
-              className="px-4 py-2.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm min-w-[220px] shadow-sm"
-            >
-              <span className="text-slate-700">
-                {segmentBy ? `Segmentar por: ${segmentBy}` : 'Segmentar por: (opcional)'}
-              </span>
-              <ChevronDown className="w-4 h-4 text-slate-500 ml-auto" />
+            <button onClick={() => setShowSegmentDropdown(!showSegmentDropdown)} className="px-4 py-2 border rounded-lg bg-white">
+              {segmentBy ? `Segmento: ${segmentBy}` : 'Segmentar'} <ChevronDown className="inline w-4 h-4" />
             </button>
-
             {showSegmentDropdown && (
-              <div className="absolute top-full mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg z-10 max-h-64 overflow-auto">
-                <button
-                  onClick={() => {
-                    setSegmentBy('');
-                    setShowSegmentDropdown(false);
-                  }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-sm text-slate-600 italic"
-                >
-                  Sin segmentación
-                </button>
-                {columns
-                  .filter(c => c !== rowVar && c !== colVar)
-                  .map((column) => (
-                    <button
-                      key={column}
-                      onClick={() => {
-                        setSegmentBy(column);
-                        setShowSegmentDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-sm text-slate-900"
-                    >
-                      {column}
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
-
-          {/* Metrics Dropdown */}
-          <div className="relative" ref={metricsRef}>
-            <button
-              onClick={() => setShowMetricsDropdown(!showMetricsDropdown)}
-              className="px-4 py-2.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm min-w-[180px] shadow-sm"
-            >
-              <span className="text-slate-700">
-                Métricas ({selectedMetrics.length})
-              </span>
-              <ChevronDown className="w-4 h-4 text-slate-500 ml-auto" />
-            </button>
-
-            {showMetricsDropdown && (
-              <div className="absolute top-full mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg z-10">
-                {metrics.map((metric) => (
-                  <label
-                    key={metric.value}
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedMetrics.includes(metric.value)}
-                      onChange={() => toggleMetric(metric.value)}
-                      className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                    />
-                    <span className="text-sm text-slate-900">{metric.label}</span>
-                  </label>
+              <div className="absolute top-full bg-white border shadow-lg z-10 max-h-60 overflow-auto w-64">
+                <div onClick={() => { setSegmentBy(''); setShowSegmentDropdown(false); }} className="px-4 py-2 hover:bg-gray-50 cursor-pointer italic">Sin segmentación</div>
+                {columns.map(c => (
+                  <div key={c} onClick={() => { setSegmentBy(c); setShowSegmentDropdown(false); }} className="px-4 py-2 hover:bg-gray-50 cursor-pointer">{c}</div>
                 ))}
               </div>
             )}
@@ -930,292 +553,61 @@ El usuario ha sido transferido al chat principal. Mantén este contexto en memor
         </div>
       </div>
 
-      {/* Content */}
+      {/* Main Content */}
       <div className="flex-1 overflow-auto p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
-              <span className="ml-3 text-slate-600">Calculando tabla de contingencia...</span>
-            </div>
-          )}
+        {loading && <div className="flex justify-center"><Loader2 className="animate-spin" /></div>}
+        {error && <div className="text-red-500 bg-red-50 p-4 rounded">{error}</div>}
 
-          {/* Error State */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-              {error}
-            </div>
-          )}
+        {!loading && !error && currentTable && (
+          <div className="bg-white rounded-lg shadow border p-6 overflow-auto">
+            <h3 className="text-lg font-bold mb-4">{rowVar} vs {colVar} {segmentBy ? `(${activeSegment})` : ''}</h3>
 
-          {/* Empty State */}
-          {!loading && !error && (!rowVar || !colVar) && (
-            <div className="bg-white rounded-xl shadow-md border border-slate-200 p-12 text-center">
-              <div className="text-slate-400 mb-4">
-                <ChevronDown className="w-12 h-12 mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium text-slate-700 mb-2">Selecciona las variables para analizar</h3>
-              <p className="text-slate-500">Elige una variable para filas y otra para columnas</p>
-            </div>
-          )}
-
-          {/* Segment Tabs */}
-          {!loading && !error && normalizedTableData && normalizedTableData.segments.length > 1 && (
-            <div className="bg-white rounded-lg border border-slate-200 shadow-sm mb-6">
-              <div className="flex items-center gap-1 px-4 border-b border-slate-200 overflow-x-auto">
-                <span className="text-xs text-slate-500 mr-2 py-3 whitespace-nowrap">
-                  Segmentado por: <span className="font-medium text-slate-700">{normalizedTableData.segment_by}</span>
-                </span>
-                {normalizedTableData.segments.map((segment) => (
-                  <button
-                    key={segment}
-                    onClick={() => setActiveSegment(segment)}
-                    className={`px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeSegment === segment
-                      ? 'text-teal-700'
-                      : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                  >
-                    {segment}
-                    {activeSegment === segment && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-teal-600"></div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Panel de Análisis IA - Diseño Mejorado */}
-          {(analysisResult || isAnalyzing) && (
-            <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-indigo-100 overflow-hidden relative">
-                {/* Barra decorativa superior */}
-                <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-
-                {/* Fondo decorativo sutil */}
-                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
-
-                <div className="p-6 relative z-10">
-                  <div className="flex items-start gap-5">
-                    {/* Icono con halo */}
-                    <div className="flex-shrink-0">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm border border-indigo-50 ${isAnalyzing ? 'bg-indigo-50' : 'bg-white'
-                        }`}>
-                        {isAnalyzing ? (
-                          <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
-                        ) : (
-                          <Sparkles className="w-6 h-6 text-indigo-600 fill-indigo-50" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Contenido */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                            {isAnalyzing ? 'Buscando correlaciones...' : 'Interpretación de Relación'}
-                            {!isAnalyzing && <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-wider border border-indigo-100">AI Analysis</span>}
-                          </h3>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {isAnalyzing ? 'Analizando dependencias y valores P...' : `Cruce: ${rowVar} vs ${colVar}`}
-                          </p>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="border p-2 bg-gray-100">{rowVar} \ {colVar}</th>
+                  {currentTable.col_categories.map(c => <th key={c} className="border p-2 bg-gray-50">{c}</th>)}
+                  <th className="border p-2 bg-gray-100">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentTable.row_categories.map(rowCat => (
+                  <tr key={rowCat}>
+                    <td className="border p-2 font-medium">{rowCat}</td>
+                    {currentTable.col_categories.map(colCat => (
+                      <td key={colCat} className="border p-2 text-center">
+                        <div className="flex flex-col text-xs">
+                          <span className="font-bold text-sm">{currentTable.cells[rowCat][colCat].count}</span>
+                          <span className="text-gray-500">{currentTable.cells[rowCat][colCat].row_percent.toFixed(1)}%</span>
                         </div>
-                        {!isAnalyzing && (
-                          <button
-                            onClick={() => setAnalysisResult(null)}
-                            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
-                            title="Cerrar análisis"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="text-slate-600 text-sm leading-relaxed bg-slate-50/50 rounded-lg p-4 border border-slate-100">
-                        {isAnalyzing ? (
-                          <div className="space-y-3 py-2">
-                            <div className="h-2 bg-indigo-100 rounded w-3/4 animate-pulse"></div>
-                            <div className="h-2 bg-indigo-100 rounded w-full animate-pulse"></div>
-                            <div className="h-2 bg-indigo-100 rounded w-5/6 animate-pulse"></div>
-                          </div>
-                        ) : (
-                          <div className="prose prose-sm prose-indigo max-w-none">
-                            {analysisResult!.split('\n').map((line, i) => (
-                              <p key={i} className={`min-h-[1em] ${line.trim() === '' ? 'h-2' : 'mb-2 last:mb-0'}`}>
-                                {line.split('**').map((part, index) =>
-                                  index % 2 === 1 ? <strong key={index} className="text-indigo-900 font-semibold">{part}</strong> : part
-                                )}
-                              </p>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Contingency Table */}
-          {!loading && !error && currentTable && (
-            <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
-              <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-teal-600 tracking-wide uppercase" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                    Tabla Cruzada
-                  </span>
-                  <h3 className="text-lg font-bold text-slate-900 tracking-tight ml-2">
-                    {currentTable.row_variable} × {currentTable.col_variable}
-                  </h3>
-                  <span className="ml-auto text-xs text-slate-600" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                    {normalizedTableData.segment_by && activeSegment !== 'General' && `${activeSegment} | `}N = {currentTable.grand_total}
-                  </span>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  {/* Table Headers */}
-                  <thead>
-                    {/* Top-level header with column variable name */}
-                    <tr className="bg-gradient-to-b from-blue-50 to-blue-100">
-                      <th rowSpan={2} className="px-6 py-4 text-left text-slate-800 border-b-2 border-blue-300" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: '15px' }}>
-                        {currentTable.row_variable}
-                      </th>
-                      <th rowSpan={2} className="px-4 py-4 text-center text-slate-700 border-b-2 border-blue-300 bg-blue-50/50" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: '14px' }}>
-                        Métrica
-                      </th>
-                      <th colSpan={currentTable.col_categories.length} className="px-6 py-3 text-center text-slate-800 border-b border-blue-300" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: '15px' }}>
-                        {currentTable.col_variable}
-                      </th>
-                      <th rowSpan={2} className="px-6 py-4 text-center text-slate-800 border-b-2 border-blue-300 bg-blue-100" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: '15px' }}>
-                        TOTAL
-                      </th>
-                    </tr>
-                    {/* Second-level header with categories */}
-                    <tr className="bg-gradient-to-b from-blue-50 to-blue-100">
-                      {currentTable.col_categories.map((colCat) => (
-                        <th key={colCat} className="px-6 py-3 text-center text-slate-700 border-b-2 border-blue-300" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: '14px' }}>
-                          {colCat}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {/* Data Rows */}
-                    {currentTable.row_categories.map((rowCat, index) => (
-                      <tr key={rowCat} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}>
-                        {/* Row Label */}
-                        <td className="px-6 py-2 text-slate-900 align-top border-b border-slate-200" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: '14px' }}>
-                          {rowCat}
-                        </td>
-
-                        {/* Metrics Label Column */}
-                        <td className="px-4 py-2 align-top border-b border-slate-200 bg-slate-50/30">
-                          <div className="flex flex-col gap-1 py-3">
-                            {selectedMetrics.includes('frecuencia') && (
-                              <div className="text-slate-600" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 600, fontSize: '13px' }}>N</div>
-                            )}
-                            {selectedMetrics.includes('pct_fila') && (
-                              <div className="text-slate-600 leading-relaxed" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 500, fontSize: '12px' }}>% Fila</div>
-                            )}
-                            {selectedMetrics.includes('pct_columna') && (
-                              <div className="text-slate-600 leading-relaxed" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 500, fontSize: '12px' }}>% Columna</div>
-                            )}
-                            {selectedMetrics.includes('pct_total') && (
-                              <div className="text-slate-600 leading-relaxed" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 500, fontSize: '12px' }}>% Total</div>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Data Cells */}
-                        {currentTable.col_categories.map((colCat) => (
-                          <td key={colCat} className="px-6 border-b border-slate-200">
-                            <MetricCell data={currentTable.cells[rowCat][colCat]} />
-                          </td>
-                        ))}
-
-                        {/* Row Total */}
-                        <td className="px-6 border-b border-slate-200 bg-slate-50/30">
-                          <MetricCell data={currentTable.row_totals[rowCat]} />
-                        </td>
-                      </tr>
+                      </td>
                     ))}
+                    <td className="border p-2 text-center font-bold">
+                      {currentTable.row_totals[rowCat].count}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-                    {/* Total Row */}
-                    <tr className="bg-gradient-to-b from-slate-100 to-slate-50 border-t-2 border-slate-400">
-                      <td className="px-6 py-2 text-slate-900 align-top" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: '14px' }}>
-                        TOTAL
-                      </td>
-                      <td className="px-4 py-2 align-top bg-slate-100/50">
-                        <div className="flex flex-col gap-1 py-3">
-                          {selectedMetrics.includes('frecuencia') && (
-                            <div className="text-slate-600" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 600, fontSize: '13px' }}>N</div>
-                          )}
-                          {selectedMetrics.includes('pct_fila') && (
-                            <div className="text-slate-600 leading-relaxed" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 500, fontSize: '12px' }}>% Fila</div>
-                          )}
-                          {selectedMetrics.includes('pct_columna') && (
-                            <div className="text-slate-600 leading-relaxed" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 500, fontSize: '12px' }}>% Columna</div>
-                          )}
-                          {selectedMetrics.includes('pct_total') && (
-                            <div className="text-slate-600 leading-relaxed" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 500, fontSize: '12px' }}>% Total</div>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Column Totals */}
-                      {currentTable.col_categories.map((colCat) => (
-                        <td key={colCat} className="px-6 bg-slate-100/50">
-                          <MetricCell data={currentTable.col_totals[colCat]} isTotal />
-                        </td>
-                      ))}
-
-                      {/* Grand Total */}
-                      <td className="px-6 bg-slate-100">
-                        <div className="py-3">
-                          {selectedMetrics.includes('frecuencia') && (
-                            <div className="text-center mb-1 text-slate-900" style={{ fontFamily: 'IBM Plex Mono, JetBrains Mono, Roboto Mono, monospace', fontWeight: 700, fontSize: '14px' }}>
-                              {currentTable.grand_total}
-                            </div>
-                          )}
-                          {selectedMetrics.includes('pct_fila') && (
-                            <div className="text-slate-700 text-center leading-relaxed" style={{ fontFamily: 'IBM Plex Mono, JetBrains Mono, Roboto Mono, monospace', fontWeight: 700, fontSize: '13px' }}>
-                              100.00%
-                            </div>
-                          )}
-                          {selectedMetrics.includes('pct_columna') && (
-                            <div className="text-slate-700 text-center leading-relaxed" style={{ fontFamily: 'IBM Plex Mono, JetBrains Mono, Roboto Mono, monospace', fontWeight: 700, fontSize: '13px' }}>
-                              100.00%
-                            </div>
-                          )}
-                          {selectedMetrics.includes('pct_total') && (
-                            <div className="text-slate-700 text-center leading-relaxed" style={{ fontFamily: 'IBM Plex Mono, JetBrains Mono, Roboto Mono, monospace', fontWeight: 700, fontSize: '13px' }}>
-                              100.00%
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <ActionToolbar
-                onExportExcel={handleExportExcel}
-                onExportPDF={handleExportPDF}
-                onAIInterpretation={handleAIInterpretation}
-                onContinueToChat={handleContinueToChat}
-                isAnalyzing={isAnalyzing}
-                isNavigating={isNavigating}
-              />
-            </div>
-          )}
-        </div>
+        {!loading && !error && !currentTable && (
+          <div className="text-center text-gray-500 mt-20">Selecciona variables para ver la tabla</div>
+        )}
       </div>
+
+      {/* Toolbar */}
+      {currentTable && (
+        <ActionToolbar
+          onExportExcel={handleExportExcel}
+          onExportPDF={handleExportPDF}
+          onAIInterpretation={handleAIInterpretation}
+          onContinueToChat={handleContinueToChat}
+          isAnalyzing={isAnalyzing}
+          isNavigating={isNavigating}
+        />
+      )}
     </div>
   );
 }
