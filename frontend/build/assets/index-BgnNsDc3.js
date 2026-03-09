@@ -1,0 +1,107 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/DataPreprocessing-CqY6vHjv.js","assets/ui-vendor-xpyfA3yl.js","assets/react-vendor-CGW8ol1_.js","assets/dialog-DKXZZp0D.js","assets/chart-vendor-qjz1oLjx.js","assets/x-DWhEXdi8.js","assets/DescriptiveStats-C1p-zeV1.js","assets/ai-BwosrZO1.js","assets/markdown-vendor-CznH_dNw.js","assets/AIAssistant-DB7dXkR8.js"])))=>i.map(i=>d[i]);
+import{r as n,j as e}from"./ui-vendor-xpyfA3yl.js";import{a as L}from"./react-vendor-CGW8ol1_.js";(function(){const a=document.createElement("link").relList;if(a&&a.supports&&a.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))i(s);new MutationObserver(s=>{for(const o of s)if(o.type==="childList")for(const l of o.addedNodes)l.tagName==="LINK"&&l.rel==="modulepreload"&&i(l)}).observe(document,{childList:!0,subtree:!0});function r(s){const o={};return s.integrity&&(o.integrity=s.integrity),s.referrerPolicy&&(o.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?o.credentials="include":s.crossOrigin==="anonymous"?o.credentials="omit":o.credentials="same-origin",o}function i(s){if(s.ep)return;s.ep=!0;const o=r(s);fetch(s.href,o)}})();var j={},A;function M(){if(A)return j;A=1;var t=L();return j.createRoot=t.createRoot,j.hydrateRoot=t.hydrateRoot,j}var R=M();const z="modulepreload",V=function(t){return"/"+t},S={},k=function(a,r,i){let s=Promise.resolve();if(r&&r.length>0){let l=function(d){return Promise.all(d.map(m=>Promise.resolve(m).then(p=>({status:"fulfilled",value:p}),p=>({status:"rejected",reason:p}))))};document.getElementsByTagName("link");const c=document.querySelector("meta[property=csp-nonce]"),g=c?.nonce||c?.getAttribute("nonce");s=l(r.map(d=>{if(d=V(d),d in S)return;S[d]=!0;const m=d.endsWith(".css"),p=m?'[rel="stylesheet"]':"";if(document.querySelector(`link[href="${d}"]${p}`))return;const u=document.createElement("link");if(u.rel=m?"stylesheet":z,m||(u.as="script"),u.crossOrigin="",u.href=d,g&&u.setAttribute("nonce",g),document.head.appendChild(u),m)return new Promise((f,v)=>{u.addEventListener("load",f),u.addEventListener("error",()=>v(new Error(`Unable to preload CSS for ${d}`)))})}))}function o(l){const c=new Event("vite:preloadError",{cancelable:!0});if(c.payload=l,window.dispatchEvent(c),!c.defaultPrevented)throw l}return s.then(l=>{for(const c of l||[])c.status==="rejected"&&o(c.reason);return a().catch(o)})};/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const q=t=>t.replace(/([a-z0-9])([A-Z])/g,"$1-$2").toLowerCase(),O=t=>t.replace(/^([A-Z])|[\s-_]+(\w)/g,(a,r,i)=>i?i.toUpperCase():r.toLowerCase()),E=t=>{const a=O(t);return a.charAt(0).toUpperCase()+a.slice(1)},$=(...t)=>t.filter((a,r,i)=>!!a&&a.trim()!==""&&i.indexOf(a)===r).join(" ").trim();/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */var B={xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"};/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const T=n.forwardRef(({color:t="currentColor",size:a=24,strokeWidth:r=2,absoluteStrokeWidth:i,className:s="",children:o,iconNode:l,...c},g)=>n.createElement("svg",{ref:g,...B,width:a,height:a,stroke:t,strokeWidth:i?Number(r)*24/Number(a):r,className:$("lucide",s),...c},[...l.map(([d,m])=>n.createElement(d,m)),...Array.isArray(o)?o:[o]]));/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const x=(t,a)=>{const r=n.forwardRef(({className:i,...s},o)=>n.createElement(T,{ref:o,iconNode:a,className:$(`lucide-${q(E(t))}`,`lucide-${t}`,i),...s}));return r.displayName=E(t),r};/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const H=[["path",{d:"M10.268 21a2 2 0 0 0 3.464 0",key:"vwvbt9"}],["path",{d:"M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326",key:"11g9vi"}]],U=x("bell",H);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const K=[["path",{d:"M3 3v16a2 2 0 0 0 2 2h16",key:"c24i48"}],["path",{d:"M18 17V9",key:"2bz60n"}],["path",{d:"M13 17V5",key:"1frdt8"}],["path",{d:"M8 17v-3",key:"17ska0"}]],Z=x("chart-column",K);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const F=[["path",{d:"m15 18-6-6 6-6",key:"1wnfg3"}]],W=x("chevron-left",F);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const G=[["ellipse",{cx:"12",cy:"5",rx:"9",ry:"3",key:"msslwz"}],["path",{d:"M3 5V19A9 3 0 0 0 21 19V5",key:"1wlel7"}],["path",{d:"M3 12A9 3 0 0 0 21 12",key:"mv7ke4"}]],J=x("database",G);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const Q=[["path",{d:"M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",key:"1nclc0"}],["circle",{cx:"12",cy:"12",r:"3",key:"1v7zrd"}]],X=x("eye",Q);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const Y=[["path",{d:"M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2",key:"18mbvz"}],["path",{d:"M6.453 15h11.094",key:"3shlmq"}],["path",{d:"M8.5 2h7",key:"csnxdl"}]],ee=x("flask-conical",Y);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const te=[["rect",{width:"7",height:"9",x:"3",y:"3",rx:"1",key:"10lvy0"}],["rect",{width:"7",height:"5",x:"14",y:"3",rx:"1",key:"16une8"}],["rect",{width:"7",height:"9",x:"14",y:"12",rx:"1",key:"1hutg5"}],["rect",{width:"7",height:"5",x:"3",y:"16",rx:"1",key:"ldoo1y"}]],se=x("layout-dashboard",te);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ae=[["line",{x1:"4",x2:"20",y1:"12",y2:"12",key:"1e0a9i"}],["line",{x1:"4",x2:"20",y1:"6",y2:"6",key:"1owob3"}],["line",{x1:"4",x2:"20",y1:"18",y2:"18",key:"yk5zj1"}]],re=x("menu",ae);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const oe=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M9 3v18",key:"fh3hqa"}],["path",{d:"m16 15-3-3 3-3",key:"14y99z"}]],ne=x("panel-left-close",oe);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ie=[["path",{d:"M5 12h14",key:"1ays0h"}],["path",{d:"M12 5v14",key:"s699le"}]],le=x("plus",ie);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ce=[["path",{d:"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z",key:"1qme2f"}],["circle",{cx:"12",cy:"12",r:"3",key:"1v7zrd"}]],de=x("settings",ce);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const he=[["path",{d:"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z",key:"4pj2yx"}],["path",{d:"M20 3v4",key:"1olli1"}],["path",{d:"M22 5h-4",key:"1gvqau"}],["path",{d:"M4 17v2",key:"vumght"}],["path",{d:"M5 18H3",key:"zchphs"}]],xe=x("sparkles",he);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const me=[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["circle",{cx:"12",cy:"12",r:"6",key:"1vlfrh"}],["circle",{cx:"12",cy:"12",r:"2",key:"1c9p78"}]],ue=x("target",me);/**
+ * @license lucide-react v0.487.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ge=[["path",{d:"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z",key:"1xq2db"}]],pe=x("zap",ge),ye=[{name:"Inicio",icon:se,view:"inicio"},{name:"Preprocesamiento",icon:J,view:"preprocesamiento"},{name:"Estadística Descriptiva",icon:Z,view:"estadistica"},{name:"Asistente IA",icon:xe,view:"asistente"},{name:"Pruebas de Hipótesis",icon:ee,view:null},{name:"Configuración",icon:de,view:null}];function fe({collapsed:t,onToggleCollapse:a,activeView:r,onNavigate:i}){return e.jsxs("aside",{className:`
+        relative bg-white border-r border-gray-200 shadow-xl z-20
+        transition-all duration-300 ease-in-out flex flex-col
+        ${t?"w-0 overflow-hidden":"w-64"}
+      `,children:[e.jsx("button",{onClick:a,className:`
+          absolute top-5 -right-3 z-30
+          w-6 h-6 bg-white border border-gray-200 rounded-full
+          shadow-md flex items-center justify-center
+          hover:bg-teal-50 hover:border-teal-300
+          transition-all duration-200
+          ${t?"opacity-0 pointer-events-none":"opacity-100"}
+        `,"aria-label":t?"Abrir menú lateral":"Cerrar menú lateral",children:e.jsx(W,{className:"w-3.5 h-3.5 text-gray-500 transition-transform duration-300"})}),e.jsxs("div",{className:`
+        flex flex-col h-full w-64 min-w-[16rem]
+        transition-opacity duration-200 ease-in-out
+        ${t?"opacity-0":"opacity-100"}
+      `,children:[e.jsx("div",{className:"h-16 flex items-center px-6 border-b border-gray-200",children:e.jsxs("div",{className:"flex items-center gap-2.5",children:[e.jsx("div",{className:"w-7 h-7 bg-gradient-to-br from-teal-600 to-teal-700 rounded flex items-center justify-center flex-shrink-0",children:e.jsx("span",{className:"text-white text-sm",children:"B"})}),e.jsx("span",{className:"text-gray-900 tracking-tight whitespace-nowrap",children:"Biometric"})]})}),e.jsx("nav",{className:"flex-1 py-6 px-3",children:e.jsx("ul",{className:"space-y-1",children:ye.map(s=>{const o=s.view===r;return e.jsx("li",{children:e.jsxs("button",{onClick:()=>s.view&&i(s.view),disabled:!s.view,className:`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all whitespace-nowrap ${o?"bg-teal-50 text-teal-700":"text-gray-700 hover:bg-gray-50 hover:text-gray-900"} ${s.view?"":"opacity-50 cursor-not-allowed"}`,children:[e.jsx(s.icon,{className:"w-5 h-5 flex-shrink-0"}),e.jsx("span",{className:"text-sm",children:s.name}),o&&e.jsx("div",{className:"ml-auto w-1.5 h-1.5 bg-teal-600 rounded-full flex-shrink-0"})]})},s.name)})})}),e.jsx("div",{className:"p-4 border-t border-gray-200",children:e.jsxs("div",{className:"flex items-center gap-3",children:[e.jsx("div",{className:"w-9 h-9 bg-gradient-to-br from-teal-100 to-teal-200 rounded-full flex items-center justify-center flex-shrink-0",children:e.jsx("span",{className:"text-teal-700 text-sm",children:"SC"})}),e.jsxs("div",{className:"flex-1 min-w-0",children:[e.jsx("div",{className:"text-sm text-gray-900 truncate",children:"Dr. Sara Castro"}),e.jsx("div",{className:"text-xs text-gray-500",children:"Investigadora"})]})]})})]})]})}function ve({currentView:t,onToggleSidebar:a,isSidebarOpen:r}){const i={inicio:{title:"Inicio",subtitle:"Panel de control y análisis"},preprocesamiento:{title:"Preprocesamiento de Datos",subtitle:"Importar, limpiar y preparar datos para análisis"},estadistica:{title:"Estadística Descriptiva",subtitle:"Análisis estadístico y visualización de datos"},asistente:{title:"Asistente Virtual",subtitle:"Chat inteligente para análisis de datos con IA"}},s=i[t]||i.inicio;return e.jsxs("header",{className:"h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6",children:[e.jsxs("div",{className:"flex items-center gap-4",children:[e.jsx("button",{onClick:a,className:"p-2 hover:bg-gray-100 rounded-md transition-colors","aria-label":r?"Cerrar menú lateral":"Abrir menú lateral",children:r?e.jsx(ne,{className:"w-5 h-5 text-gray-600"}):e.jsx(re,{className:"w-5 h-5 text-gray-600"})}),e.jsxs("div",{children:[e.jsx("h1",{className:"text-gray-900",children:s.title}),e.jsx("p",{className:"text-xs text-gray-500",children:s.subtitle})]})]}),e.jsx("div",{className:"flex items-center gap-3",children:e.jsxs("button",{className:"relative p-2 text-gray-600 hover:bg-gray-50 rounded-md transition-colors",children:[e.jsx(U,{className:"w-5 h-5"}),e.jsx("span",{className:"absolute top-1.5 right-1.5 w-2 h-2 bg-teal-600 rounded-full"})]})})]})}function be(){return e.jsxs("div",{className:"p-6 max-w-7xl mx-auto space-y-8",children:[e.jsx("div",{className:"bg-gradient-to-br from-teal-600 to-teal-700 rounded-lg p-8 text-white",children:e.jsxs("div",{className:"max-w-3xl",children:[e.jsx("h1",{className:"text-3xl mb-3",children:"Bienvenido a Biometric, Dr. Castro"}),e.jsx("p",{className:"text-teal-50 text-lg mb-6",children:"Su asistente inteligente para el análisis de datos clínicos."}),e.jsxs("button",{className:"px-6 py-3 bg-white text-teal-700 rounded-md hover:bg-teal-50 transition-colors flex items-center gap-2",children:[e.jsx(le,{className:"w-5 h-5"}),e.jsx("span",{children:"Nuevo Proyecto"})]})]})}),e.jsxs("div",{className:"grid grid-cols-1 md:grid-cols-3 gap-6",children:[e.jsxs("div",{className:"bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow",children:[e.jsx("div",{className:"w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mb-4",children:e.jsx(pe,{className:"w-6 h-6 text-teal-600"})}),e.jsx("h3",{className:"text-gray-900 mb-2",children:"Agilidad en el Proceso"}),e.jsx("p",{className:"text-sm text-gray-600 leading-relaxed",children:"Transforme datos brutos en insights clínicos en segundos, eliminando la limpieza manual."})]}),e.jsxs("div",{className:"bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow",children:[e.jsx("div",{className:"w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mb-4",children:e.jsx(ue,{className:"w-6 h-6 text-teal-600"})}),e.jsx("h3",{className:"text-gray-900 mb-2",children:"Rigor Científico"}),e.jsx("p",{className:"text-sm text-gray-600 leading-relaxed",children:"Algoritmos validados para garantizar la reproducibilidad de su investigación."})]}),e.jsxs("div",{className:"bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow",children:[e.jsx("div",{className:"w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mb-4",children:e.jsx(X,{className:"w-6 h-6 text-teal-600"})}),e.jsx("h3",{className:"text-gray-900 mb-2",children:"Enfoque Visual"}),e.jsx("p",{className:"text-sm text-gray-600 leading-relaxed",children:"Diseñado para investigadores, no solo para programadores."})]})]}),e.jsxs("div",{className:"bg-white rounded-lg border border-gray-200 p-6",children:[e.jsx("h2",{className:"text-gray-900 mb-4",children:"Acciones Rápidas"}),e.jsxs("div",{className:"grid grid-cols-1 md:grid-cols-2 gap-4",children:[e.jsxs("button",{className:"p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left",children:[e.jsx("div",{className:"text-sm text-gray-900 mb-1",children:"Cargar Nuevo Dataset"}),e.jsx("div",{className:"text-xs text-gray-500",children:"Importar archivo CSV o Excel"})]}),e.jsxs("button",{className:"p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left",children:[e.jsx("div",{className:"text-sm text-gray-900 mb-1",children:"Continuar Proyecto Reciente"}),e.jsx("div",{className:"text-xs text-gray-500",children:"estudio_glucosa_2024.csv"})]}),e.jsxs("button",{className:"p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left",children:[e.jsx("div",{className:"text-sm text-gray-900 mb-1",children:"Ver Análisis Guardados"}),e.jsx("div",{className:"text-xs text-gray-500",children:"3 análisis disponibles"})]}),e.jsxs("button",{className:"p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left",children:[e.jsx("div",{className:"text-sm text-gray-900 mb-1",children:"Explorar Plantillas"}),e.jsx("div",{className:"text-xs text-gray-500",children:"Datasets de ejemplo"})]})]})]}),e.jsx("div",{className:"bg-gradient-to-r from-gray-50 to-teal-50/30 rounded-lg border border-gray-200 p-8",children:e.jsxs("div",{className:"max-w-3xl mx-auto text-center",children:[e.jsx("p",{className:"text-xl text-gray-700 italic mb-3",children:'"La estadística es la gramática de la ciencia."'}),e.jsx("p",{className:"text-sm text-gray-600",children:"— Karl Pearson"})]})})]})}const je=n.lazy(()=>k(()=>import("./DataPreprocessing-CqY6vHjv.js"),__vite__mapDeps([0,1,2,3,4,5])).then(t=>({default:t.DataPreprocessing}))),we=n.lazy(()=>k(()=>import("./DescriptiveStats-C1p-zeV1.js").then(t=>t.D),__vite__mapDeps([6,1,2,3,4,5,7,8])).then(t=>({default:t.DescriptiveStats}))),Ne=n.lazy(()=>k(()=>import("./AIAssistant-DB7dXkR8.js"),__vite__mapDeps([9,1,2,7,5,8])).then(t=>({default:t.AIAssistant})));function ke(){const[t,a]=n.useState(!1),[r,i]=n.useState("inicio"),[s,o]=n.useState(void 0),l=(c,g)=>{g?o(g):c!=="asistente"&&o(void 0),i(c)};return e.jsxs("div",{className:"flex h-screen bg-gray-100",children:[e.jsx(fe,{collapsed:t,onToggleCollapse:()=>a(!t),activeView:r,onNavigate:c=>l(c)}),e.jsxs("div",{className:"flex-1 flex flex-col overflow-hidden",children:[e.jsx(ve,{currentView:r,onToggleSidebar:()=>a(!t),isSidebarOpen:!t}),e.jsxs("main",{className:"flex-1 overflow-auto bg-gray-50",children:[r==="inicio"&&e.jsx(be,{}),e.jsxs(n.Suspense,{fallback:e.jsx("div",{className:"flex items-center justify-center h-full",children:e.jsx("div",{className:"animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"})}),children:[r==="preprocesamiento"&&e.jsx(je,{}),r==="estadistica"&&e.jsx(we,{onNavigate:l}),r==="asistente"&&e.jsx(Ne,{initialChatId:s})]})]})]})]})}const P="http://localhost:8000/api/v1",D=n.createContext(void 0);function _e({children:t}){const[a,r]=n.useState(null),[i,s]=n.useState([]),[o,l]=n.useState([]),[c,g]=n.useState(0),[d,m]=n.useState(null),[p,u]=n.useState(!1),[f,v]=n.useState(null),b=n.useCallback(h=>{r(h),h?localStorage.setItem("biometric_session_id",h):(localStorage.removeItem("biometric_session_id"),s([]),l([]),g(0),m(null))},[]);n.useEffect(()=>{const h=localStorage.getItem("biometric_session_id");h&&r(h)},[]);const _=n.useCallback(async(h=0,w=50)=>{if(a){u(!0),v(null);try{const y=await fetch(`${P}/data?session_id=${a}&skip=${h}&limit=${w}`);if(y.status===404){console.warn("Sesión expirada o no encontrada (404). Reiniciando..."),b(null);return}if(!y.ok)throw new Error("Error al cargar datos");const N=await y.json();s(N.data||[]),l(N.columns||[]),g(N.total_rows||0)}catch(y){v(y instanceof Error?y.message:"Error desconocido"),console.error(y)}finally{u(!1)}}},[a]),C=n.useCallback(async()=>{if(a)try{const h=await fetch(`${P}/cleaning/quality?session_id=${a}`);if(h.status===404){console.warn("Sesión expirada o no encontrada (404). Reiniciando..."),b(null);return}if(h.ok){const w=await h.json();m(w.report)}}catch(h){console.error("Error fetching health report:",h)}},[a]),I=n.useMemo(()=>({sessionId:a,setSessionId:b,data:i,setData:s,columns:o,setColumns:l,totalRows:c,healthReport:d,isLoading:p,error:f,refreshData:_,refreshHealthReport:C}),[a,b,i,o,c,d,p,f,_,C]);return e.jsx(D.Provider,{value:I,children:t})}function Se(){const t=n.useContext(D);if(t===void 0)throw new Error("useDataContext must be used within a DataProvider");return t}R.createRoot(document.getElementById("root")).render(e.jsx(_e,{children:e.jsx(ke,{})}));export{W as C,J as D,le as P,xe as S,k as _,Z as a,x as c,Se as u};

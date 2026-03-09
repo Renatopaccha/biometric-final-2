@@ -26,7 +26,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-gray-100">
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -35,7 +35,11 @@ export default function App() {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header currentView={currentView} />
+        <Header
+          currentView={currentView}
+          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          isSidebarOpen={!sidebarCollapsed}
+        />
 
         <main className="flex-1 overflow-auto bg-gray-50">
           {currentView === 'inicio' && <Home />}
